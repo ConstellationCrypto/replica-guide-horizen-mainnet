@@ -37,7 +37,7 @@ services:
       OP_NODE_S3_REGION: us-west-2
       OP_NODE_S3_BUCKET: caldera-celestia-cache-prod
       OP_NODE_NAMESPACE_ID: "00000000000000000000000000000000000000ca1de12a2f7333bbf444"
-      
+      OP_NODE_ROLLUP_L1_CHAIN_CONFIG=/config/l1_chain_config.json
     restart: always
     command: >
       op-node
@@ -70,4 +70,5 @@ services:
       - "${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt"
       - "${PWD}/jwt-secret.txt:/config/test-jwt-secret.txt"
       - "${PWD}/rollup.json:/rollup.json"
+      - "${PWD}/l1_chain_config.json:/config/l1_chain_config.json"
       - op_log:/op_log
