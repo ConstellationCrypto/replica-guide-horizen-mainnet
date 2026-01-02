@@ -33,8 +33,10 @@ services:
     stop_signal: SIGINT
     stop_grace_period: 30s
     environment:
-      
       OP_NODE_L1_BEACON_IGNORE: "true"
+      OP_NODE_S3_REGION: us-west-2
+      OP_NODE_S3_BUCKET: caldera-celestia-cache-prod
+      OP_NODE_NAMESPACE_ID: "00000000000000000000000000000000000000ca1de12a2f7333bbf444"
       
     restart: always
     command: >
