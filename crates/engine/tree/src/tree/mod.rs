@@ -2726,6 +2726,7 @@ where
         // returned.
         warn!(
             target: "engine::tree",
+            ?block,
             invalid_hash=%block.hash(),
             invalid_number=block.number(),
             %validation_err,
