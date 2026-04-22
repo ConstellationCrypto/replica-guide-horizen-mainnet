@@ -28,3 +28,8 @@ make up
 make down
 make clean
 ```
+
+
+### Snapshot
+
+https://caldera-chain-data-snapshots.s3.us-west-2.amazonaws.com/exported-snapshots/bedrock-horizen/bedrock-horizen-reth-2026-Apr-22.tar

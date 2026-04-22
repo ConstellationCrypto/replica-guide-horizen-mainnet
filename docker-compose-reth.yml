@@ -1,0 +1,89 @@
+version: '3.4'
+
+volumes:
+  reth_data:
+  op_log:
+  reth_logs:
+
+services:
+  l2:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-reth:v1.11.5
+    platform: linux/amd64
+    restart: always
+    environment:
+      - RUST_BACKTRACE=full
+    ports:
+      - "0.0.0.0:${OP_RETH_METRICS_PORT:-9001}:9001"
+      - "0.0.0.0:${OP_RETH_DISCOVERY_PORT:-30303}:30303/tcp"
+      - "0.0.0.0:${OP_RETH_DISCOVERY_PORT:-30303}:30303/udp"
+      - "0.0.0.0:${OP_RETH_RPC_PORT:-8545}:8545"
+      - "0.0.0.0:${OP_RETH_WS_PORT:-8546}:8546"
+      - "0.0.0.0:${OP_RETH_ENGINE_PORT:-8551}:8551"
+    volumes:
+      - "${PWD}/reth_data:/db"
+      - reth_logs:/root/logs
+      - "${PWD}:/work:ro"
+    command: >
+      node
+      --rollup.disable-tx-pool-gossip
+      --rollup.sequencer="https://horizen.calderachain.xyz/http"
+      --rollup.historicalrpc="https://horizen.calderachain.xyz/http"
+      --datadir /db
+      --chain /work/genesis.json
+      --metrics 0.0.0.0:9001
+      --log.file.directory /root/logs
+      --authrpc.addr 0.0.0.0
+      --authrpc.port 8551
+      --authrpc.jwtsecret /work/jwt-secret.txt
+      --http
+      --http.addr 0.0.0.0
+      --http.port 8545
+      --http.api eth,net,web3,debug,txpool
+      --http.corsdomain *
+      --ws
+      --ws.addr 0.0.0.0
+      --ws.port 8546
+      --ws.origins *
+      --ipcdisable
+
+  op-node:
+    depends_on:
+      - l2
+    image: "us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.16.12"
+    platform: linux/amd64
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    environment:
+      OP_NODE_L1_BEACON_IGNORE: "true"
+      OP_NODE_ROLLUP_L1_CHAIN_CONFIG: /work/l1_chain_config.json
+    restart: always
+    command: >
+      op-node
+      --l1="${L1_RPC_URL}"
+      --l2=http://l2:8551
+      --l2.jwt-secret=/work/jwt-secret.txt
+      --sequencer.enabled=false
+      --verifier.l1-confs=10
+      --rollup.config=/work/rollup.json
+      --rpc.addr=0.0.0.0
+      --rpc.port=8545
+      --p2p.no-discovery=false
+      --p2p.listen.ip=0.0.0.0
+      --p2p.listen.tcp=9003
+      --p2p.listen.udp=9003
+      --p2p.static=/ip4/44.255.138.48/tcp/9003/p2p/16Uiu2HAm1yyHgvkvdwQDJs7qNYGgPLNSAmWNtCSqR6t4CTZcmtez
+      --snapshotlog.file=/op_log/snapshot.log
+      --p2p.priv.path=/work/p2p-node-key.txt
+      --metrics.enabled
+      --metrics.addr=0.0.0.0
+      --metrics.port=7300
+      --pprof.enabled
+      --rpc.enable-admin
+    ports:
+      - "7545:8545"
+      - "9003:9003"
+      - "7300:7300"
+      - "6060:6060"
+    volumes:
+      - "${PWD}:/work:ro"
+      - op_log:/op_log
