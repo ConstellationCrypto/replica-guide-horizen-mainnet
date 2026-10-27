@@ -2,12 +2,11 @@ version: '3.4'
 
 volumes:
   reth_data:
-  op_log:
   reth_logs:
 
 services:
   l2:
-    image: public.ecr.aws/i6b2w2n6/op-reth:v2.3.1
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-reth:v2.6.1
     platform: linux/amd64
     restart: always
     environment:
@@ -29,6 +28,7 @@ services:
       --rollup.sequencer="https://horizen.calderachain.xyz/http"
       --rollup.historicalrpc="https://horizen.calderachain.xyz/http"
       --datadir /db
+      --storage.v2 false
       --chain /work/genesis.json
       --metrics 0.0.0.0:9001
       --log.file.directory /root/logs
@@ -45,11 +45,15 @@ services:
       --ws.port 8546
       --ws.origins *
       --ipcdisable
+      --addr 0.0.0.0
+      --port 30303
+      --disable-discovery
+      --trusted-peers enode://ca965bbc0cfce267ed50a8b03dd394a448f39ff234810f1256044f6825a5b5b4b85ef258914bd6671217e8efcae54ed38d73a52d439f860989172c625d16d492@52.13.24.214:30303,enode://ca965bbc0cfce267ed50a8b03dd394a448f39ff234810f1256044f6825a5b5b4b85ef258914bd6671217e8efcae54ed38d73a52d439f860989172c625d16d492@32.184.93.244:30303,enode://ca965bbc0cfce267ed50a8b03dd394a448f39ff234810f1256044f6825a5b5b4b85ef258914bd6671217e8efcae54ed38d73a52d439f860989172c625d16d492@32.185.207.253:30303
 
   op-node:
     depends_on:
       - l2
-    image: "us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.16.12"
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.19.11
     platform: linux/amd64
     stop_signal: SIGINT
     stop_grace_period: 30s
@@ -63,6 +67,7 @@ services:
       --l1="${L1_RPC_URL}"
       --l2=http://l2:8551
       --l2.jwt-secret=/work/jwt-secret.txt
+      --l2.enginekind=reth
       --sequencer.enabled=false
       --verifier.l1-confs=10
       --rollup.config=/work/rollup.json
@@ -73,8 +78,8 @@ services:
       --p2p.listen.tcp=9003
       --p2p.listen.udp=9003
       --p2p.static=/ip4/44.255.138.48/tcp/9003/p2p/16Uiu2HAm1yyHgvkvdwQDJs7qNYGgPLNSAmWNtCSqR6t4CTZcmtez
-      --snapshotlog.file=/op_log/snapshot.log
       --p2p.priv.path=/work/p2p-node-key.txt
+      --syncmode=execution-layer
       --metrics.enabled
       --metrics.addr=0.0.0.0
       --metrics.port=7300
@@ -87,4 +92,3 @@ services:
       - "6060:6060"
     volumes:
       - "${PWD}:/work:ro"
-      - op_log:/op_log
